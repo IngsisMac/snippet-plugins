@@ -98,6 +98,7 @@ tasks.register("installGitHooks") {
             #!/bin/sh
             echo "==> [IngSIS Quality] Running pre-commit verification..."
             ./gradlew spotlessApply
+            git add -u
             ./gradlew check
             if [ ${'$'}? -ne 0 ]; then
                 echo "❌ Pre-commit quality checks failed! Please fix errors before committing."
