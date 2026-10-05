@@ -7,7 +7,7 @@ Gradle Convention Plugins para la suite de microservicios de **Snippet Playgroun
 | Plugin ID | Descripción |
 |---|---|
 | `ingsis.snippet.quality` | Configuración de calidad: Spotless (ktlint 1.3.1), Detekt (reglas calibradas) y JaCoCo (cobertura mínima 80%). |
-| `ingsis.snippet.spring` | Configuración base para servicios Spring Boot con Kotlin y JVM 21 toolchain (aplica `ingsis.snippet.quality`). |
+| `ingsis.snippet.spring` | Configuración base para servicios Spring Boot con Kotlin y JVM 21 toolchain (aplica `ingsis.snippet.quality`). Incluye `plugin.spring` y `plugin.jpa` con `allOpen` para entidades: sin ellos Hibernate no puede instanciar las clases Kotlin (`No default constructor for entity`). |
 | `ingsis.snippet.publish` | Configuración de publicación hacia GitHub Packages y Maven Local. |
 
 ## Uso en Microservicios
@@ -28,7 +28,7 @@ En el archivo `build.gradle.kts` del microservicio:
 
 ```kotlin
 plugins {
-    id("ingsis.snippet.spring") version "0.1.0"
+    id("ingsis.snippet.spring") version "0.1.1"
 }
 ```
 

@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "ingsis.snippet"
-version = "0.1.0"
+version = "0.1.1"
 
 repositories {
     gradlePluginPortal()
@@ -14,6 +14,7 @@ repositories {
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:2.0.21")
     implementation("org.jetbrains.kotlin:kotlin-allopen:2.0.21")
+    implementation("org.jetbrains.kotlin:kotlin-noarg:2.0.21")
     implementation("com.diffplug.spotless:spotless-plugin-gradle:6.25.0")
     implementation("io.gitlab.arturbosch.detekt:detekt-gradle-plugin:1.23.7")
     implementation("org.springframework.boot:spring-boot-gradle-plugin:3.3.3")
