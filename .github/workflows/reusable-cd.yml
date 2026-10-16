@@ -59,6 +59,8 @@ jobs:
           images: ghcr.io/${{ github.repository_owner }}/${{ inputs.image-name }}
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=prod,enable={{is_default_branch}}
+            type=raw,value=dev,enable=${{ github.ref == 'refs/heads/dev' }}
             type=sha,format=short
 
       - name: Set up Docker Buildx
