@@ -3,6 +3,16 @@ name: Publish Convention Plugins
 on:
   push:
     branches: [ main ]
+    # Publicar es la reaccion a cambiar el plugin, no a cambiar un workflow. Estos tres
+    # no entran en el artefacto, asi que tocarlos no tiene por que disparar un publish:
+    # como la version es fija, el intento termina en 409 y deja el repo en rojo sin
+    # motivo. Es una lista de exclusion y no una de inclusion a proposito, para que un
+    # archivo nuevo que si afecte al build dispare el publish sin que haya que acordarse
+    # de agregarlo aca.
+    paths-ignore:
+      - '.github/**'
+      - 'README.md'
+      - '.gitignore'
   workflow_dispatch:
 
 jobs:
