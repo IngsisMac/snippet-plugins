@@ -38,7 +38,48 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew check
 
+      # Un release es inmutable y tiene numero propio: si la version ya esta en Packages,
+      # republicarla no es un error del pipeline, es un no-op. Antes de intentar el PUT le
+      # pregunto al registry si el .pom de esta version ya existe, asi un push que no cambia
+      # el artefacto no deja la corrida en rojo con un 409.
+      - name: Check whether this version is already in Packages
+        id: release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          set -euo pipefail
+          version="$(./gradlew -q printVersion)"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          # Misma URL que nombra el 409: el .pom del plugin marker de ingsis.snippet.publish.
+          # Las cuatro publicaciones (la libreria y los tres markers) suben juntas en la misma
+          # corrida y con la misma version, asi que alcanza con preguntar por una.
+          pom="https://maven.pkg.github.com/${GITHUB_REPOSITORY}/ingsis/snippet/publish/ingsis.snippet.publish.gradle.plugin/${version}/ingsis.snippet.publish.gradle.plugin-${version}.pom"
+          code="$(curl -sSL -o /dev/null -w '%{http_code}' -u "$ACTOR:$GITHUB_TOKEN" "$pom")"
+          echo "HTTP $code -> $pom"
+          case "$code" in
+            200)
+              echo "exists=true" >> "$GITHUB_OUTPUT"
+              ;;
+            404)
+              echo "exists=false" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              # No se saltea nunca por un chequeo que no concluyo: publico igual y aviso.
+              echo "::warning::El chequeo de la version $version no concluyo (HTTP $code). Intento publicar igual."
+              echo "exists=false" >> "$GITHUB_OUTPUT"
+              ;;
+          esac
+
       - name: Publish to GitHub Packages
+        if: steps.release.outputs.exists != 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./gradlew publish
+
+      # El skip tiene que ser ruidoso: si alguien cambia el plugin y se olvida de subir la
+      # version, el publish no haria nada y los servicios seguirian usando el plugin viejo.
+      - name: Warn that nothing was published
+        if: steps.release.outputs.exists == 'true'
+        run: |
+          echo "::warning::La version ${{ steps.release.outputs.version }} ya esta en GitHub Packages y no se publico nada. Si cambiaste src/ o build.gradle.kts, subi la version en build.gradle.kts y actualiza los servicios que la piden."

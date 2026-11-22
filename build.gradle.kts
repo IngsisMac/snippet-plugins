@@ -34,3 +34,12 @@ publishing {
         }
     }
 }
+
+// La version de este archivo es la fuente de verdad del release. La expongo como tarea para
+// que el pipeline pueda preguntarle a GitHub Packages si ya la publico, sin parsear el build.
+tasks.register("printVersion") {
+    description = "Imprime la version del release, para que el pipeline la consulte."
+    doLast {
+        println(project.version)
+    }
+}
