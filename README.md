@@ -16,20 +16,53 @@ En el archivo `settings.gradle.kts` del microservicio:
 
 ```kotlin
 pluginManagement {
+    // La version no vive en el repo del servicio: por defecto se resuelve la ultima
+    // publicada en GitHub Packages. Se pinnea con -PsnippetPluginsVersion=0.1.1 o con
+    // la variable SNIPPET_PLUGINS_VERSION.
+    val pinnedPluginsVersion: String? =
+        providers.gradleProperty("snippetPluginsVersion").orNull
+            ?: System.getenv("SNIPPET_PLUGINS_VERSION")
+
     repositories {
-        mavenLocal()
+        // mavenLocal solo cuando hay version pinneada: con una version flotante un
+        // artefacto viejo en ~/.m2 le ganaria para siempre al registry.
+        if (pinnedPluginsVersion != null) {
+            mavenLocal()
+        }
         gradlePluginPortal()
         mavenCentral()
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/IngsisMac/snippet-plugins")
+            credentials {
+                username = providers.gradleProperty("gpr.user").orNull ?: System.getenv("GITHUB_ACTOR")
+                password = providers.gradleProperty("gpr.key").orNull ?: System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
+
+    resolutionStrategy {
+        eachPlugin {
+            if (requested.id.id.startsWith("ingsis.snippet.")) {
+                useVersion(pinnedPluginsVersion ?: "latest.release")
+            }
+        }
     }
 }
 ```
 
-En el archivo `build.gradle.kts` del microservicio:
+En el archivo `build.gradle.kts` del microservicio, **sin version**:
 
 ```kotlin
 plugins {
-    id("ingsis.snippet.spring") version "0.1.1"
+    id("ingsis.snippet.spring")
 }
+```
+
+Para un build reproducible o para probar un plugin que todavia no se publico:
+
+```bash
+./gradlew build -PsnippetPluginsVersion=0.1.1
 ```
 
 ## Publicación Local
